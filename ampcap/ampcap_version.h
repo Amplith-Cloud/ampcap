@@ -1,0 +1,1 @@
+#define AMPCAP_VERSION "v1.32"

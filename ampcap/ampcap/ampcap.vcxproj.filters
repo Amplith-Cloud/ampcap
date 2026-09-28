@@ -27,7 +27,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\licecap_ui.cpp">
+    <ClCompile Include="..\ampcap_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\WDL\filebrowse.cpp">
@@ -107,7 +107,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\licecap_version.h">
+    <ClInclude Include="..\ampcap_version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\resource.h">
@@ -175,7 +175,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\licecap.rc">
+    <ResourceCompile Include="..\ampcap.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

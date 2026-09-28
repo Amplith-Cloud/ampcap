@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>licecap</string>
+	<string>AmpCap</string>
 	<key>CFBundleIconFile</key>
-	<string>licecap</string>
+	<string>ampcap</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.cockos.LICEcap</string>
+	<string>com.amplithian.AmpCap</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

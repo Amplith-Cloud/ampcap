@@ -1,19 +1,22 @@
 /*
-    LICEcap (command line utility)
-    Copyright (C) 2010 Cockos Incorporated
+    AmpCap (command line utility)
+    Copyright (C) 2026 Amplithian
 
-    LICEcap is free software; you can redistribute it and/or modify
+    Derived from LICEcap, Copyright (C) 2010 Cockos Incorporated
+    https://www.cockos.com/licecap/
+
+    AmpCap is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
-    LICEcap is distributed in the hope that it will be useful,
+    AmpCap is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with LICEcap; if not, write to the Free Software
+    along with AmpCap; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
@@ -23,7 +26,7 @@
 
 
 #include "../WDL/lice/lice_lcf.h"
-#include "licecap_version.h"
+#include "ampcap_version.h"
 
 bool g_done=false;
 
@@ -73,7 +76,7 @@ void DoMouseCursor(HDC hdc, HWND h, int xoffs, int yoffs)
 
 int main(int argc, char **argv)
 {
-  printf("LICEcap CLI utility " LICECAP_VERSION "\nCopyright (C) 2010 Cockos Incorporated\n");
+  printf("AmpCap CLI utility " AMPCAP_VERSION "\nCopyright (C) 2026 Amplithian. Derived from LICEcap, Copyright (C) 2010 Cockos Incorporated\n");
   signal(SIGINT,sigfuncint);
   if (argc==4 && !strcmp(argv[1],"-d"))
   {
@@ -309,8 +312,8 @@ int main(int argc, char **argv)
   else 
   {
     printf("usage: \n"
-           "  licecap -d file.lcf fnout[.gif|.png]]  ; converts lcf file to gif (or PNGs)\n"
-           "  licecap -e file.[lcf|gif|png] [maxfps] ; encodes full screen until Ctrl+C\n"
+           "  ampcap -d file.lcf fnout[.gif|.png]]  ; converts lcf file to gif (or PNGs)\n"
+           "  ampcap -e file.[lcf|gif|png] [maxfps] ; encodes full screen until Ctrl+C\n"
            "Note: if PNG specified, filenames will be file-XXX.png\n"
            );
   }

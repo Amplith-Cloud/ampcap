@@ -1,3 +1,7 @@
+AmpCap (fork of LICEcap v1.32)
+  + Renamed to AmpCap; Amplithian fork of Cockos LICEcap
+  + Settings now stored in ampcap.ini (section [ampcap]) / ~/Library/Application Support/AmpCap
+
 v1.32 - February 13, 2022
   + Prevent positioning window offscreen on Windows [issue 72]
 

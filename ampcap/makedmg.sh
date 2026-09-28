@@ -37,7 +37,7 @@ function regsearch_file($fn, $pattern)
 $verstr1 = "";
 $verstr1_full = "";
 
-$regs = regsearch_file("licecap_version.h",'/^#define LICECAP_VERSION "v(.*)".*$/');
+$regs = regsearch_file("ampcap_version.h",'/^#define AMPCAP_VERSION "v(.*)".*$/');
 if ($regs) $verstr1 = str_replace(".","",$verstr1_full=$regs[1]);
 
 echo "APP version $verstr1\n";
@@ -49,12 +49,12 @@ $ver=$verstr1;
 $workdir = "build/BUILD";
 system("rm -fr $workdir");
 system("mkdir $workdir");
-system("mkdir $workdir/LICEcap");
+system("mkdir $workdir/AmpCap");
 
-system("cp -R 'build/$src_build_dir/LICEcap.app' $workdir/LICEcap/");
+system("cp -R 'build/$src_build_dir/AmpCap.app' $workdir/AmpCap/");
 
-copy_text_replace_line("build/$src_build_dir/LICEcap.app/Contents/Info.plist",
-		       "$workdir/LICEcap/LICEcap.app/Contents/Info.plist",
+copy_text_replace_line("build/$src_build_dir/AmpCap.app/Contents/Info.plist",
+		       "$workdir/AmpCap/AmpCap.app/Contents/Info.plist",
 			"\t<string>DEVELOPMENT BUILD -- DEVELOPMENT BUILD</string>",
 			"\t<string>$verstr1_full</string>");
 
@@ -77,28 +77,28 @@ if ($fp)
   fclose($fp);
 }
 
-system("cp whatsnew.txt $workdir/LICEcap");
+system("cp whatsnew.txt $workdir/AmpCap");
 
 if ($sign_by != "") 
 {
   echo "signing code as $sign_by\n";
   if ($notarize_email != "")
   {
-    system("codesign --force --options runtime --timestamp --deep --sign \"$sign_by\" --entitlements ./LICEcap.entitlements $workdir/LICEcap/LICEcap.app",$rv);
+    system("codesign --force --options runtime --timestamp --deep --sign \"$sign_by\" --entitlements ./AmpCap.entitlements $workdir/AmpCap/AmpCap.app",$rv);
     if ($rv) die("error signing\n");
-    system("rm -f licecap.zip");
-    system("zip -r licecap.zip $workdir/LICEcap/LICEcap.app");
-    system("xcrun altool -t osx -f licecap.zip --primary-bundle-id com.cockos.LICEcap --notarize-app --username $notarize_email --password \"@keychain:Developer-altool\"");
+    system("rm -f ampcap.zip");
+    system("zip -r ampcap.zip $workdir/AmpCap/AmpCap.app");
+    system("xcrun altool -t osx -f ampcap.zip --primary-bundle-id com.amplithian.AmpCap --notarize-app --username $notarize_email --password \"@keychain:Developer-altool\"");
     system("sleep 300");
-    system("xcrun stapler staple $workdir/LICEcap/LICEcap.app");
+    system("xcrun stapler staple $workdir/AmpCap/AmpCap.app");
   }
   else
-    system("codesign -s \"$sign_by\" $workdir/LICEcap/LICEcap.app");
+    system("codesign -s \"$sign_by\" $workdir/AmpCap/AmpCap.app");
 }
 
-$destfile = "./build/licecap$ver.dmg";
+$destfile = "./build/ampcap$ver.dmg";
 
-system("perl ./pkg-dmg --format UDBZ --target $destfile --source $workdir/LICEcap --license ./license-cleaned.txt --copy stage_DS_Store:/.DS_Store --symlink /Applications:/Applications --mkdir .background --copy background.png:.background --volname LICECAP_INSTALL --icon licecap.icns --config cmd_SetFile=/Applications/Xcode.app/Contents/Developer/usr/bin/SetFile --config cmd_Rez=/Applications/Xcode.app/Contents/Developer/usr/bin/Rez");
+system("perl ./pkg-dmg --format UDBZ --target $destfile --source $workdir/AmpCap --license ./license-cleaned.txt --copy stage_DS_Store:/.DS_Store --symlink /Applications:/Applications --mkdir .background --copy background.png:.background --volname AMPCAP_INSTALL --icon ampcap.icns --config cmd_SetFile=/Applications/Xcode.app/Contents/Developer/usr/bin/SetFile --config cmd_Rez=/Applications/Xcode.app/Contents/Developer/usr/bin/Rez");
 
 system("sh ./make-license-xml.sh $destfile");
 

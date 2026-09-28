@@ -1,7 +1,7 @@
 
 /*
  *  capturewindow.mm
- *  licecap
+ *  ampcap
  *
  *  Created by Justin on 11/7/11.
  *  Copyright 2011 __MyCompanyName__. All rights reserved.

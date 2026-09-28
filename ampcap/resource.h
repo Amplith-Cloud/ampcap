@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by licecap.rc
+// Used by ampcap.rc
 //
 #define IDD_DIALOG1                     101
 #define IDI_ICON1                       103

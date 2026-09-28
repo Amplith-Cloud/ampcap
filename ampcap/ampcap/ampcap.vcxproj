@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\licecap.rc" />
+    <ResourceCompile Include="..\ampcap.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WDL\filebrowse.cpp" />
@@ -47,7 +47,7 @@
     <ClCompile Include="..\..\WDL\zlib\inftrees.c" />
     <ClCompile Include="..\..\WDL\zlib\trees.c" />
     <ClCompile Include="..\..\WDL\zlib\zutil.c" />
-    <ClCompile Include="..\licecap_ui.cpp" />
+    <ClCompile Include="..\ampcap_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\WDL\filebrowse.h" />
@@ -70,13 +70,13 @@
     <ClInclude Include="..\..\WDL\zlib\zconf.in.h" />
     <ClInclude Include="..\..\WDL\zlib\zlib.h" />
     <ClInclude Include="..\..\WDL\zlib\zutil.h" />
-    <ClInclude Include="..\licecap_version.h" />
+    <ClInclude Include="..\ampcap_version.h" />
     <ClInclude Include="..\resource.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DC8CCBA9-5214-48ED-96AE-C181752FDFDF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>licecap</RootNamespace>
+    <RootNamespace>ampcap</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

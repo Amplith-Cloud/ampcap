@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="licecap_cli" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="ampcap_gui" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Console Application" 0x0103
+# TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=licecap_cli - Win32 Debug
+CFG=ampcap_gui - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "licecap_cli.mak".
+!MESSAGE NMAKE /f "ampcap_gui.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "licecap_cli.mak" CFG="licecap_cli - Win32 Debug"
+!MESSAGE NMAKE /f "ampcap_gui.mak" CFG="ampcap_gui - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "licecap_cli - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "licecap_cli - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "ampcap_gui - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "ampcap_gui - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -26,33 +26,36 @@ CFG=licecap_cli - Win32 Debug
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 CPP=xicl6.exe
+MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "licecap_cli - Win32 Release"
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "Release"
-# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Output_Dir "ampcap_gui___Win32_Release"
+# PROP BASE Intermediate_Dir "ampcap_gui___Win32_Release"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
-# PROP Intermediate_Dir "licecap_cli___Win32_Release"
+# PROP Intermediate_Dir "ampcap_gui___Win32_Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "PNG_WRITE_SUPPORTED" /D "USE_ICC" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "PNG_WRITE_SUPPORTED" /D "USE_ICC" /YX /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"Release/ampcap.exe"
 
-!ELSEIF  "$(CFG)" == "licecap_cli - Win32 Debug"
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -62,26 +65,28 @@ LINK32=xilink6.exe
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
-# PROP Intermediate_Dir "licecap_cli___Win32_Debug"
+# PROP Intermediate_Dir "ampcap_gui___Win32_Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "PNG_WRITE_SUPPORTED" /YX /FD /GZ /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /GZ /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/ampcap.exe" /pdbtype:sept
 
 !ENDIF 
 
 # Begin Target
 
-# Name "licecap_cli - Win32 Release"
-# Name "licecap_cli - Win32 Debug"
+# Name "ampcap_gui - Win32 Release"
+# Name "ampcap_gui - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -97,98 +102,67 @@ LINK32=xilink6.exe
 # Begin Source File
 
 SOURCE=..\WDL\giflib\dgif_lib.c
+
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
+
 # ADD CPP /I "../WDL/giflib" /D "HAVE_CONFIG_H"
+
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\WDL\giflib\egif_lib.c
+
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
+
 # ADD CPP /I "../WDL/giflib" /D "HAVE_CONFIG_H"
+
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\WDL\giflib\gif_hash.c
+
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
+
 # ADD CPP /I "../WDL/giflib" /D "HAVE_CONFIG_H"
+
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\WDL\giflib\gifalloc.c
+
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
+
 # ADD CPP /I "../WDL/giflib" /D "HAVE_CONFIG_H"
+
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\WDL\lice\lice_gif.cpp
-# End Source File
-# End Group
-# Begin Group "png"
 
-# PROP Default_Filter ""
-# Begin Source File
+!IF  "$(CFG)" == "ampcap_gui - Win32 Release"
 
-SOURCE=..\WDL\libpng\png.c
-# End Source File
-# Begin Source File
+# ADD CPP /I "../WDL/giflib" /D "HAVE_CONFIG_H"
 
-SOURCE=..\WDL\libpng\pngerror.c
-# End Source File
-# Begin Source File
+!ELSEIF  "$(CFG)" == "ampcap_gui - Win32 Debug"
 
-SOURCE=..\WDL\libpng\pnggccrd.c
-# End Source File
-# Begin Source File
+!ENDIF 
 
-SOURCE=..\WDL\libpng\pngget.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngmem.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngpread.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngread.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngrio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngrtran.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngrutil.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngset.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngtrans.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngvcrd.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngwio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngwrite.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngwtran.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\WDL\libpng\pngwutil.c
 # End Source File
 # End Group
 # Begin Group "zlib"
@@ -273,6 +247,10 @@ SOURCE=..\WDL\lice\lice.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\WDL\lice\lice_arc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\WDL\lice\lice_gif_write.cpp
 # End Source File
 # Begin Source File
@@ -285,21 +263,33 @@ SOURCE=..\WDL\lice\lice_lcf.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\WDL\lice\lice_line.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\WDL\lice\lice_palette.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\WDL\lice\lice_png.cpp
+SOURCE=..\WDL\lice\lice_text.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=..\WDL\lice\lice_png_write.cpp
-# End Source File
-# End Group
 # End Group
 # Begin Source File
 
-SOURCE=.\licecap_cli.cpp
+SOURCE=..\WDL\filebrowse.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\WDL\win32_utf8.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\WDL\wingui\wndsize.cpp
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\ampcap_ui.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -307,12 +297,20 @@ SOURCE=.\licecap_cli.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\licecap_version.h
+SOURCE=.\ampcap_version.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\ampcap.rc
+# End Source File
 # End Group
 # End Target
 # End Project

@@ -1,19 +1,22 @@
 /*
-    LICEcap
-    Copyright (C) 2010 Cockos Incorporated
+    AmpCap
+    Copyright (C) 2026 Amplithian
 
-    LICEcap is free software; you can redistribute it and/or modify
+    Derived from LICEcap, Copyright (C) 2010 Cockos Incorporated
+    https://www.cockos.com/licecap/
+
+    AmpCap is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
-    LICEcap is distributed in the hope that it will be useful,
+    AmpCap is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with LICEcap; if not, write to the Free Software
+    along with AmpCap; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
@@ -74,7 +77,7 @@
 #include "../WDL/wdlstring.h"
 
 
-#include "licecap_version.h"
+#include "ampcap_version.h"
 
 #include "resource.h"
 
@@ -604,9 +607,9 @@ void UpdateCaption(HWND hwndDlg)
   if (!g_cap_state) 
   {
 #ifdef REAPER_LICECAP
-    SetWindowText(hwndDlg,"REAPER_LICEcap " LICECAP_VERSION " [stopped]");
+    SetWindowText(hwndDlg,"REAPER_LICEcap " AMPCAP_VERSION " [stopped]");
 #else
-    SetWindowText(hwndDlg,"LICEcap " LICECAP_VERSION " [stopped]");
+    SetWindowText(hwndDlg,"AmpCap " AMPCAP_VERSION " [stopped]");
 #endif
   }
   else
@@ -624,7 +627,7 @@ void UpdateCaption(HWND hwndDlg)
       }
       else g_cap_prerolluntil=0;
     }
-    snprintf(buf,sizeof(buf),"%s%.100s - LICEcap%s",pbuf,p,pbuf[0]?"":g_cap_state==1?" [recording]":" [paused]");
+    snprintf(buf,sizeof(buf),"%s%.100s - AmpCap%s",pbuf,p,pbuf[0]?"":g_cap_state==1?" [recording]":" [paused]");
     SetWindowText(hwndDlg,buf);
   }
 }
@@ -1053,32 +1056,32 @@ void SaveConfig(HWND hwndDlg)
   RECT r;
   GetWindowRect(hwndDlg,&r);
   sprintf(buf,"%d %d %d %d",(int)r.left,(int)r.top,(int)r.right,(int)r.bottom);
-  WritePrivateProfileString("licecap","wnd_r",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","wnd_r",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_max_fps);
-  WritePrivateProfileString("licecap","maxfps",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","maxfps",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_prefs);
-  WritePrivateProfileString("licecap","prefs",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","prefs",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_titlems);
-  WritePrivateProfileString("licecap","titlems",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","titlems",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_gif_loopcount);
-  WritePrivateProfileString("licecap","gifloopcnt",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","gifloopcnt",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_stop_after_msec);
-  WritePrivateProfileString("licecap","stopafter",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","stopafter",buf,g_ini_file.Get());
   
   
 
-  WritePrivateProfileString("licecap","title",g_title,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","title",g_title,g_ini_file.Get());
 
 #ifdef VIDEO_ENCODER_SUPPORT
   sprintf(buf, "%d", g_cap_video_vbr);
-  WritePrivateProfileString("licecap","video_vbr",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","video_vbr",buf,g_ini_file.Get());
   sprintf(buf, "%d", g_cap_video_abr);
-  WritePrivateProfileString("licecap","video_abr",buf,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","video_abr",buf,g_ini_file.Get());
 #endif
 
 }
 
-static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   static POINT s_last_mouse;
   switch (uMsg)
@@ -1114,8 +1117,8 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
       ++g_reent;
 
-      g_gif_loopcount = GetPrivateProfileInt("licecap","gifloopcnt",g_gif_loopcount,g_ini_file.Get());
-      g_max_fps = GetPrivateProfileInt("licecap", "maxfps", g_max_fps, g_ini_file.Get());
+      g_gif_loopcount = GetPrivateProfileInt("ampcap","gifloopcnt",g_gif_loopcount,g_ini_file.Get());
+      g_max_fps = GetPrivateProfileInt("ampcap", "maxfps", g_max_fps, g_ini_file.Get());
       SetDlgItemInt(hwndDlg,IDC_MAXFPS,g_max_fps,FALSE);
       --g_reent;
 
@@ -1129,7 +1132,7 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
       if (!GetAsyncKeyState(VK_SHIFT))
       {
         char buf[1024];
-        GetPrivateProfileString("licecap","wnd_r","",buf,sizeof(buf),g_ini_file.Get());
+        GetPrivateProfileString("ampcap","wnd_r","",buf,sizeof(buf),g_ini_file.Get());
         int a[4]={0,};
         const char *p=buf;
         int x;
@@ -1149,15 +1152,15 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
       }
       UpdateDimBoxes(hwndDlg);
 
-      g_prefs = GetPrivateProfileInt("licecap", "prefs", g_prefs, g_ini_file.Get());
-      g_titlems = GetPrivateProfileInt("licecap", "titlems", g_titlems, g_ini_file.Get());
-      g_stop_after_msec = GetPrivateProfileInt("licecap", "stopafter", g_stop_after_msec, g_ini_file.Get());
+      g_prefs = GetPrivateProfileInt("ampcap", "prefs", g_prefs, g_ini_file.Get());
+      g_titlems = GetPrivateProfileInt("ampcap", "titlems", g_titlems, g_ini_file.Get());
+      g_stop_after_msec = GetPrivateProfileInt("ampcap", "stopafter", g_stop_after_msec, g_ini_file.Get());
 
-      GetPrivateProfileString("licecap","title","",g_title,sizeof(g_title),g_ini_file.Get());
+      GetPrivateProfileString("ampcap","title","",g_title,sizeof(g_title),g_ini_file.Get());
 
 #ifdef VIDEO_ENCODER_SUPPORT
-      g_cap_video_vbr = GetPrivateProfileInt("licecap", "video_vbr", g_cap_video_vbr, g_ini_file.Get());
-      g_cap_video_abr = GetPrivateProfileInt("licecap", "video_abr", g_cap_video_abr, g_ini_file.Get());
+      g_cap_video_vbr = GetPrivateProfileInt("ampcap", "video_vbr", g_cap_video_vbr, g_ini_file.Get());
+      g_cap_video_abr = GetPrivateProfileInt("ampcap", "video_abr", g_cap_video_abr, g_ini_file.Get());
 #endif
 
     return 1;
@@ -1509,7 +1512,7 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             const char *tab[][2]={
               { "GIF files (*.gif)\0*.gif\0", ".gif" },
             #ifndef NO_LCF_SUPPORT
-              { "LiceCap files (*.lcf)\0*.lcf\0", ".lcf" },
+              { "AmpCap files (*.lcf)\0*.lcf\0", ".lcf" },
             #endif
             #ifdef VIDEO_ENCODER_SUPPORT
               { "WEBM files (*.webm)\0*.webm\0", ".webm" },
@@ -1563,7 +1566,7 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 #endif
                                       ))
             {
-              WritePrivateProfileString("licecap","lastfn",g_last_fn,g_ini_file.Get());
+              WritePrivateProfileString("ampcap","lastfn",g_last_fn,g_ini_file.Get());
 
 #ifdef _WIN32
               if (g_prefs&16)
@@ -1867,9 +1870,9 @@ static WDL_DLGRET liceCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
   bool want_appdata = true;
-  g_ini_file.Set("licecap.ini");
+  g_ini_file.Set("ampcap.ini");
 
-  // if exepath\licecap.ini is present, use it
+  // if exepath\ampcap.ini is present, use it
   {
     char exepath[2048];
     exepath[0]=0;
@@ -1881,7 +1884,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (exepath[0])
     {
       g_ini_file.Set(exepath);
-      g_ini_file.Append("\\licecap.ini");
+      g_ini_file.Append("\\ampcap.ini");
       FILE *fp=fopen(g_ini_file.Get(),"r");
       if (fp) 
       {
@@ -1891,7 +1894,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
   }
 
-  // use appdata/licecap.ini
+  // use appdata/ampcap.ini
   if (want_appdata)
   {
     HKEY k;
@@ -1903,17 +1906,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       if (RegQueryValueEx(k,"AppData",0,&t,(unsigned char *)buf,&b) == ERROR_SUCCESS && t == REG_SZ)
       {
         g_ini_file.Set(buf);
-        g_ini_file.Append("\\licecap.ini");
+        g_ini_file.Append("\\ampcap.ini");
       }
       RegCloseKey(k);
     }
   }
 
 
-  GetPrivateProfileString("licecap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
+  GetPrivateProfileString("ampcap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
 
   g_hInst = hInstance;
-  DialogBox(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),GetDesktopWindow(),liceCapMainProc);
+  DialogBox(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),GetDesktopWindow(),ampCapMainProc);
   return 0;
 }
 
@@ -1933,7 +1936,7 @@ INT_PTR SWELLAppMain(int msg, INT_PTR parm1, INT_PTR parm2)
         *p=0;
       
         g_ini_file.Set(exepath);
-        g_ini_file.Append("/licecap.ini");
+        g_ini_file.Append("/ampcap.ini");
         FILE *fp = fopen(g_ini_file.Get(),"r");
         if (fp) 
         {
@@ -1945,10 +1948,10 @@ INT_PTR SWELLAppMain(int msg, INT_PTR parm1, INT_PTR parm2)
           if (p && *p)
           {
             g_ini_file.Set(p);
-            g_ini_file.Append("/Library/Application Support/LICEcap");
+            g_ini_file.Append("/Library/Application Support/AmpCap");
             mkdir(g_ini_file.Get(),0777);
             
-            g_ini_file.Append("/licecap.ini");
+            g_ini_file.Append("/ampcap.ini");
             fp=fopen(g_ini_file.Get(),"a");
             if (fp)
             {
@@ -1957,16 +1960,16 @@ INT_PTR SWELLAppMain(int msg, INT_PTR parm1, INT_PTR parm2)
             else
             {
               g_ini_file.Set(exepath);
-              g_ini_file.Append("/licecap.ini");
+              g_ini_file.Append("/ampcap.ini");
             }
           }
         }
-        GetPrivateProfileString("licecap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
+        GetPrivateProfileString("ampcap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
       }
     break;
     case SWELLAPP_LOADED:
     
-      CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,liceCapMainProc);
+      CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,ampCapMainProc);
       ShowWindow(g_hwnd,SW_SHOW);
     break;
     case SWELLAPP_ONCOMMAND:
@@ -2129,7 +2132,7 @@ int g_command_id;
 
 static unsigned WINAPI uiThread(void *p)
 {
-  DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),GetDesktopWindow(),liceCapMainProc);
+  DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DIALOG1),GetDesktopWindow(),ampCapMainProc);
   return 0;
 }
 
@@ -2176,7 +2179,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
 
     reaperAPI_getfunc = rec->GetFunc;
     g_ini_file.Set(get_ini_file());
-    GetPrivateProfileString("licecap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
+    GetPrivateProfileString("ampcap","lastfn","",g_last_fn,sizeof(g_last_fn),g_ini_file.Get());
 
     g_command_id = rec->Register("command_id","reaper_licecap_window");
     if (g_command_id)
@@ -2220,7 +2223,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
 #ifndef _WIN32
 
 #include "../WDL/swell/swell-dlggen.h"
-#include "licecap.rc_mac_dlg"
+#include "ampcap.rc_mac_dlg"
 
 #endif
 
