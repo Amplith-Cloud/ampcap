@@ -292,12 +292,13 @@ char g_watermark[256] = AMPCAP_COPYRIGHT_SIGN " Amplithian Polyforge";
 
 // LICE's built-in font only has glyphs for ASCII 1-127, so the copyright
 // sign is drawn from its own 8x8 bitmap and other non-ASCII characters
-// become '?'. Returns the number of 8px cells, drawing only if bm is set.
-static int draw_watermark_text(LICE_IBitmap *bm, int x, int y, const char *p, LICE_pixel color, float alpha)
+// become '?'. Returns the number of 8px cells (at most maxcells), drawing
+// only if bm is set.
+static int draw_watermark_text(LICE_IBitmap *bm, int x, int y, const char *p, LICE_pixel color, float alpha, int maxcells)
 {
   static const unsigned char copyright_glyph[8] = { 0x3C,0x42,0x9D,0xA1,0xA1,0x9D,0x42,0x3C };
   int cells = 0;
-  while (*p)
+  while (*p && cells < maxcells)
   {
     const unsigned char c = (unsigned char)*p++;
     int glyph = c; // 0 = copyright sign, -1 = nothing
@@ -330,13 +331,17 @@ static int draw_watermark_text(LICE_IBitmap *bm, int x, int y, const char *p, LI
 
 void draw_watermark(LICE_IBitmap *bm, int bw, int bh)
 {
-  const int cells = draw_watermark_text(NULL, 0, 0, g_watermark, 0, 0.0f);
-  if (!bm || !cells) return;
+  const int th = 8, mark = th, pad = 4;
 
-  const int th = 8, tw = cells*8, mark = th, pad = 4;
+  // long text is cut off to fit narrow captures rather than overflowing
+  const int maxcells = (bw - pad*2 - (pad + mark + pad + pad)) / 8;
+  const int cells = draw_watermark_text(NULL, 0, 0, g_watermark, 0, 0.0f, maxcells);
+  if (!bm || cells < 1) return;
+
+  const int tw = cells*8;
   const int w = pad + mark + pad + tw + pad, h = pad + th + pad;
   const int x = pad, y = bh - h - pad;
-  if (bw < w + pad*2 || bh < h + pad*2) return;
+  if (bh < h + pad*2) return;
 
   // Dark Ink #0B1020 plate, translucent so the capture shows through
   LICE_FillRect(bm, x, y, w, h, LICE_RGBA(0x0B,0x10,0x20,255), 0.6f, LICE_BLIT_MODE_COPY);
@@ -350,7 +355,7 @@ void draw_watermark(LICE_IBitmap *bm, int bw, int bh)
                 LICE_BLIT_MODE_COPY);
 
   // Light Core #F4F8FF text
-  draw_watermark_text(bm, x+pad+mark+pad, y+pad, g_watermark, LICE_RGBA(0xF4,0xF8,0xFF,255), 0.9f);
+  draw_watermark_text(bm, x+pad+mark+pad, y+pad, g_watermark, LICE_RGBA(0xF4,0xF8,0xFF,255), 0.9f, cells);
 }
 
 
