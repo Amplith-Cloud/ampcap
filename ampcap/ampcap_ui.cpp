@@ -174,7 +174,7 @@ public:
 
 
 
-int g_prefs; // &1=title frame, &2=giant font, &4=record mousedown, &8=timeline, &16=shift+space pause, &32=transparency-fu
+int g_prefs; // &1=title frame, &2=giant font, &4=record mousedown, &8=timeline, &16=shift+space pause, &32=transparency-fu, &128=hide copyright watermark
 int g_stop_after_msec;
 
 
@@ -277,6 +277,80 @@ void draw_timedisp(LICE_IBitmap *bm, int sec, int timeposout[4], int bw, int bh)
     LICE_DrawText(bm, timepos[0]+4, timepos[1]+4, timestr, LICE_RGBA(255,255,255,255), 1.0f, LICE_BLIT_MODE_COPY);
   }
   if (timeposout) memcpy(timeposout,timepos,sizeof(timepos));
+}
+
+// Copyright watermark (Amplithian Polyforge), drawn bottom-left of every
+// captured frame; the elapsed time display uses bottom-right. The text is
+// user-editable. It does not change between frames, so it adds nothing to
+// the GIF frame diffs.
+#ifdef _WIN32
+#define AMPCAP_COPYRIGHT_SIGN "\xA9"      // ANSI (Windows-1252)
+#else
+#define AMPCAP_COPYRIGHT_SIGN "\xC2\xA9"  // UTF-8 (SWELL)
+#endif
+char g_watermark[256] = AMPCAP_COPYRIGHT_SIGN " Amplithian Polyforge";
+
+// LICE's built-in font only has glyphs for ASCII 1-127, so the copyright
+// sign is drawn from its own 8x8 bitmap and other non-ASCII characters
+// become '?'. Returns the number of 8px cells, drawing only if bm is set.
+static int draw_watermark_text(LICE_IBitmap *bm, int x, int y, const char *p, LICE_pixel color, float alpha)
+{
+  static const unsigned char copyright_glyph[8] = { 0x3C,0x42,0x9D,0xA1,0xA1,0x9D,0x42,0x3C };
+  int cells = 0;
+  while (*p)
+  {
+    const unsigned char c = (unsigned char)*p++;
+    int glyph = c; // 0 = copyright sign, -1 = nothing
+    if (c == 0xA9) glyph = 0;
+    else if (c == 0xC2 && (unsigned char)*p == 0xA9) { p++; glyph = 0; }
+    else if (c >= 0x80 && c < 0xC0) glyph = -1; // UTF-8 continuation byte
+    else if (c >= 0x80 || c < ' ') glyph = '?';
+
+    if (glyph < 0) continue;
+    if (bm)
+    {
+      const int cx = x + cells*8;
+      if (glyph == 0)
+      {
+        for (int row = 0; row < 8; row++)
+          for (int col = 0; col < 8; col++)
+            if (copyright_glyph[row] & (0x80 >> col))
+              LICE_PutPixel(bm, cx+col, y+row, color, alpha, LICE_BLIT_MODE_COPY);
+      }
+      else if (glyph != ' ')
+      {
+        const char one[2] = { (char)glyph, 0 };
+        LICE_DrawText(bm, cx, y, one, color, alpha, LICE_BLIT_MODE_COPY);
+      }
+    }
+    cells++;
+  }
+  return cells;
+}
+
+void draw_watermark(LICE_IBitmap *bm, int bw, int bh)
+{
+  const int cells = draw_watermark_text(NULL, 0, 0, g_watermark, 0, 0.0f);
+  if (!bm || !cells) return;
+
+  const int th = 8, tw = cells*8, mark = th, pad = 4;
+  const int w = pad + mark + pad + tw + pad, h = pad + th + pad;
+  const int x = pad, y = bh - h - pad;
+  if (bw < w + pad*2 || bh < h + pad*2) return;
+
+  // Dark Ink #0B1020 plate, translucent so the capture shows through
+  LICE_FillRect(bm, x, y, w, h, LICE_RGBA(0x0B,0x10,0x20,255), 0.6f, LICE_BLIT_MODE_COPY);
+
+  // brand gradient #2563FF -> #7C5CFF at 135 degrees, split across x and y
+  const float d = 2.0f * 255.0f * (float)mark;
+  LICE_GradRect(bm, x+pad, y+pad, mark, mark,
+                0x25/255.0f, 0x63/255.0f, 1.0f, 1.0f,
+                (0x7C-0x25)/d, (0x5C-0x63)/d, 0.0f, 0.0f,
+                (0x7C-0x25)/d, (0x5C-0x63)/d, 0.0f, 0.0f,
+                LICE_BLIT_MODE_COPY);
+
+  // Light Core #F4F8FF text
+  draw_watermark_text(bm, x+pad+mark+pad, y+pad, g_watermark, LICE_RGBA(0xF4,0xF8,0xFF,255), 0.9f);
 }
 
 
@@ -774,6 +848,9 @@ static UINT_PTR CALLBACK SaveOptsProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPA
       if (g_prefs&8) CheckDlgButton(hwndDlg, IDC_TIMELINE, BST_CHECKED);
       if (g_prefs&16) CheckDlgButton(hwndDlg, IDC_SSPAUSE, BST_CHECKED);
       if (g_prefs&32) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+      if (!(g_prefs&128)) CheckDlgButton(hwndDlg, IDC_WATERMARK, BST_CHECKED);
+      SetDlgItemText(hwndDlg, IDC_WATERMARK_TEXT, g_watermark);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_WATERMARK_TEXT), !(g_prefs&128));
       
 
       if (g_prefs&64) 
@@ -811,6 +888,7 @@ static UINT_PTR CALLBACK SaveOptsProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPA
       if (IsDlgButtonChecked(hwndDlg, IDC_SSPAUSE)) g_prefs |= 16;
       if (IsDlgButtonChecked(hwndDlg, IDC_CHECK1)) g_prefs |= 32;
       if (IsDlgButtonChecked(hwndDlg, IDC_CHECK2)) g_prefs |= 64;
+      if (!IsDlgButtonChecked(hwndDlg, IDC_WATERMARK)) g_prefs |= 128;
 
       char buf[256];
       GetDlgItemText(hwndDlg, IDC_MS, buf, sizeof(buf));
@@ -821,6 +899,8 @@ static UINT_PTR CALLBACK SaveOptsProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPA
 
       GetDlgItemText(hwndDlg, IDC_TITLE, g_title, sizeof(g_title));
       if (!strcmp(g_title, "Title")) g_title[0]=0;
+
+      GetDlgItemText(hwndDlg, IDC_WATERMARK_TEXT, g_watermark, sizeof(g_watermark));
 
       {
         BOOL t=FALSE;
@@ -840,6 +920,9 @@ static UINT_PTR CALLBACK SaveOptsProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPA
             EnableWindow(GetDlgItem(hwndDlg,IDC_STOPAFTER_SEC),use);
           }
         break;
+        case IDC_WATERMARK:
+          EnableWindow(GetDlgItem(hwndDlg, IDC_WATERMARK_TEXT), !!IsDlgButtonChecked(hwndDlg, IDC_WATERMARK));
+        return 0;
         case IDC_TITLEUSE:
         {
           bool use = !!IsDlgButtonChecked(hwndDlg, IDC_TITLEUSE);
@@ -1071,6 +1154,7 @@ void SaveConfig(HWND hwndDlg)
   
 
   WritePrivateProfileString("ampcap","title",g_title,g_ini_file.Get());
+  WritePrivateProfileString("ampcap","watermark",g_watermark,g_ini_file.Get());
 
 #ifdef VIDEO_ENCODER_SUPPORT
   sprintf(buf, "%d", g_cap_video_vbr);
@@ -1157,6 +1241,7 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
       g_stop_after_msec = GetPrivateProfileInt("ampcap", "stopafter", g_stop_after_msec, g_ini_file.Get());
 
       GetPrivateProfileString("ampcap","title","",g_title,sizeof(g_title),g_ini_file.Get());
+      GetPrivateProfileString("ampcap","watermark",g_watermark,g_watermark,sizeof(g_watermark),g_ini_file.Get());
 
 #ifdef VIDEO_ENCODER_SUPPORT
       g_cap_video_vbr = GetPrivateProfileInt("ampcap", "video_vbr", g_cap_video_vbr, g_ini_file.Get());
@@ -1230,6 +1315,8 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
               void DoMouseCursor(LICE_IBitmap *,int,int);
               DoMouseCursor(g_cap_bm_inv?g_cap_bm_inv:g_cap_bm,-(r2.left+1),-(r2.bottom+1));                        
 #endif
+              if (!(g_prefs&128)) draw_watermark(g_cap_bm,bw,bh);
+
               const bool dotime = !!(g_prefs&8);
 
               const int frame_time_in_seconds = g_ms_written/1000;
