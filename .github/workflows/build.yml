@@ -1,0 +1,128 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: windows (${{ matrix.platform }})
+    runs-on: windows-2022
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Win32, x64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
+
+      # The project still targets the VS 2013 toolset (v120) with no SDK
+      # version; retarget to VS 2022 (v143) and the Windows 10 SDK here
+      # rather than in the project, so upstream merges stay clean.
+      - name: Build AmpCap.exe
+        run: >
+          msbuild ampcap\ampcap\ampcap.sln -m
+          /p:Configuration=Release
+          /p:Platform=${{ matrix.platform }}
+          /p:PlatformToolset=v143
+          /p:WindowsTargetPlatformVersion=10.0
+          /p:OutDir=${{ github.workspace }}\out\${{ matrix.platform }}\
+
+      - name: Stage executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item out\${{ matrix.platform }}\ampcap.exe dist\AmpCap-${{ matrix.platform }}.exe
+
+      # installer.nsi installs to $PROGRAMFILES (32-bit), so it is built
+      # from the Win32 leg only.
+      - name: Build installer
+        if: matrix.platform == 'Win32'
+        shell: pwsh
+        run: |
+          $nsis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          if (-not (Test-Path $nsis)) { choco install nsis -y --no-progress }
+          New-Item -ItemType Directory -Force ampcap\release | Out-Null
+          Copy-Item out\Win32\ampcap.exe ampcap\release\AmpCap.exe
+          & $nsis ampcap\installer.nsi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item ampcap\ampcap*-install.exe dist\
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem dist -File | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content dist\SHA256SUMS-windows-${{ matrix.platform }}.txt
+          Get-Content dist\SHA256SUMS-windows-${{ matrix.platform }}.txt
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          subject-path: dist/*.exe
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ampcap-windows-${{ matrix.platform }}
+          path: dist/
+          if-no-files-found: error
+
+  macos:
+    runs-on: macos-15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The Xcode project runs WDL/swell/swell_resgen.sh, which needs php.
+      - name: Install php
+        run: command -v php || brew install php
+
+      # Deployment target 10.7 is below what current Xcode supports; build a
+      # universal, ad-hoc signed app. Developer ID signing and notarization
+      # are not done in CI yet.
+      - name: Build AmpCap.app
+        run: |
+          xcodebuild -project ampcap/ampcap.xcodeproj -alltargets -configuration Release \
+            SYMROOT="$PWD/build" \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+            MACOSX_DEPLOYMENT_TARGET=10.13 \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          ditto -c -k --keepParent build/Release/AmpCap.app dist/AmpCap-macos-universal.zip
+          (cd dist && shasum -a 256 *.zip > SHA256SUMS-macos.txt && cat SHA256SUMS-macos.txt)
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          subject-path: dist/*.zip
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ampcap-macos
+          path: dist/
+          if-no-files-found: error
