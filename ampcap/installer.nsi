@@ -4,6 +4,7 @@
 !define MUI_COMPONENTSPAGE_NODESC
 
   !include "MUI.nsh"
+  !include "x64.nsh"
 
 ;--------------------------------
 ;General
@@ -18,11 +19,11 @@ SetCompressor lzma
   Name "AmpCap v${VER_MAJOR}.${VER_MINOR}"
   OutFile "ampcap${VER_MAJOR}${VER_MINOR}-install.exe"
 
-  ;Default installation folder
-  InstallDir "$PROGRAMFILES\AmpCap"
-  
-  ;Get installation folder from registry if available
-  InstallDirRegKey HKLM "Software\AmpCap" ""
+  ;Default installation folder (64-bit build)
+  InstallDir "$PROGRAMFILES64\AmpCap"
+
+  ;The previous installation folder is read from the 64-bit registry view
+  ;in .onInit, since InstallDirRegKey only reads the 32-bit view
 
 ;--------------------------------
 ;Interface Settings
@@ -47,6 +48,25 @@ SetCompressor lzma
 
 
 
+
+;--------------------------------
+;64-bit only
+
+Function .onInit
+  ${IfNot} ${RunningX64}
+    MessageBox MB_OK|MB_ICONSTOP "AmpCap requires 64-bit Windows."
+    Abort
+  ${EndIf}
+  SetRegView 64
+  ReadRegStr $0 HKLM "Software\AmpCap" ""
+  ${If} $0 != ""
+    StrCpy $INSTDIR $0
+  ${EndIf}
+FunctionEnd
+
+Function un.onInit
+  SetRegView 64
+FunctionEnd
 
 ;--------------------------------
 ;Installer Sections

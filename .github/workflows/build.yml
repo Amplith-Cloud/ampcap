@@ -15,17 +15,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # AmpCap ships 64-bit only on Windows.
   windows:
-    name: windows (${{ matrix.platform }})
     runs-on: windows-2022
     permissions:
       contents: read
       id-token: write
       attestations: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [Win32, x64]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,27 +36,26 @@ jobs:
         run: >
           msbuild ampcap\ampcap\ampcap.sln -m
           /p:Configuration=Release
-          /p:Platform=${{ matrix.platform }}
+          /p:Platform=x64
           /p:PlatformToolset=v143
           /p:WindowsTargetPlatformVersion=10.0
-          /p:OutDir=${{ github.workspace }}\out\${{ matrix.platform }}\
+          /p:OutDir=${{ github.workspace }}\out\x64\
 
       - name: Stage executable
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item out\${{ matrix.platform }}\ampcap.exe dist\AmpCap-${{ matrix.platform }}.exe
+          Copy-Item out\x64\ampcap.exe dist\AmpCap-x64.exe
 
-      # installer.nsi installs to $PROGRAMFILES (32-bit), so it is built
-      # from the Win32 leg only.
+      # installer.nsi installs the x64 build to $PROGRAMFILES64 and refuses
+      # to run on 32-bit Windows.
       - name: Build installer
-        if: matrix.platform == 'Win32'
         shell: pwsh
         run: |
           $nsis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
           if (-not (Test-Path $nsis)) { choco install nsis -y --no-progress }
           New-Item -ItemType Directory -Force ampcap\release | Out-Null
-          Copy-Item out\Win32\ampcap.exe ampcap\release\AmpCap.exe
+          Copy-Item out\x64\ampcap.exe ampcap\release\AmpCap.exe
           & $nsis ampcap\installer.nsi
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item ampcap\ampcap*-install.exe dist\
@@ -70,8 +65,8 @@ jobs:
         run: |
           Get-ChildItem dist -File | ForEach-Object {
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content dist\SHA256SUMS-windows-${{ matrix.platform }}.txt
-          Get-Content dist\SHA256SUMS-windows-${{ matrix.platform }}.txt
+          } | Set-Content dist\SHA256SUMS-windows-x64.txt
+          Get-Content dist\SHA256SUMS-windows-x64.txt
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: github.event_name != 'pull_request'
@@ -80,7 +75,7 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ampcap-windows-${{ matrix.platform }}
+          name: ampcap-windows-x64
           path: dist/
           if-no-files-found: error
 
