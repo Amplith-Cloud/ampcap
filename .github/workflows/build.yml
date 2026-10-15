@@ -18,6 +18,18 @@ jobs:
   # AmpCap ships 64-bit only on Windows.
   windows:
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        # amplithian is the default branding; others are applied from
+        # ampcap/brands/<brand>/ and tag their file names with it
+        include:
+          - brand: amplithian
+            tag: ''
+            name_tag: ''
+          - brand: fmplus
+            tag: -fmplus
+            name_tag: -FMplus
     permissions:
       contents: read
       id-token: write
@@ -28,6 +40,11 @@ jobs:
           persist-credentials: false
 
       - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
+
+      - name: Apply ${{ matrix.brand }} branding
+        if: matrix.brand != 'amplithian'
+        shell: bash
+        run: cp -v ampcap/brands/${{ matrix.brand }}/* ampcap/
 
       # The project still targets the VS 2013 toolset (v120) with no SDK
       # version; retarget to VS 2022 (v143) and the Windows 10 SDK here
@@ -45,7 +62,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item out\x64\ampcap.exe dist\AmpCap-x64.exe
+          Copy-Item out\x64\ampcap.exe dist\AmpCap${{ matrix.name_tag }}-x64.exe
 
       # installer.nsi installs the x64 build to $PROGRAMFILES64 and refuses
       # to run on 32-bit Windows.
@@ -58,15 +75,16 @@ jobs:
           Copy-Item out\x64\ampcap.exe ampcap\release\AmpCap.exe
           & $nsis ampcap\installer.nsi
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Copy-Item ampcap\ampcap*-install.exe dist\
+          $installer = Get-Item ampcap\ampcap*-install.exe
+          Copy-Item $installer ("dist\" + $installer.BaseName.Replace("-install", "${{ matrix.tag }}-install") + ".exe")
 
       - name: Checksums
         shell: pwsh
         run: |
           Get-ChildItem dist -File | ForEach-Object {
             "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content dist\SHA256SUMS-windows-x64.txt
-          Get-Content dist\SHA256SUMS-windows-x64.txt
+          } | Set-Content dist\SHA256SUMS-windows-x64${{ matrix.tag }}.txt
+          Get-Content dist\SHA256SUMS-windows-x64${{ matrix.tag }}.txt
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: github.event_name != 'pull_request'
@@ -75,12 +93,24 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ampcap-windows-x64
+          name: ampcap-windows-x64${{ matrix.tag }}
           path: dist/
           if-no-files-found: error
 
   macos:
     runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        # amplithian is the default branding; others are applied from
+        # ampcap/brands/<brand>/ and tag their file names with it
+        include:
+          - brand: amplithian
+            tag: ''
+            name_tag: ''
+          - brand: fmplus
+            tag: -fmplus
+            name_tag: -FMplus
     permissions:
       contents: read
       id-token: write
@@ -93,6 +123,11 @@ jobs:
       # The Xcode project runs WDL/swell/swell_resgen.sh, which needs php.
       - name: Install php
         run: command -v php || brew install php
+
+      - name: Apply ${{ matrix.brand }} branding
+        if: matrix.brand != 'amplithian'
+        shell: bash
+        run: cp -v ampcap/brands/${{ matrix.brand }}/* ampcap/
 
       # Deployment target 10.7 is below what current Xcode supports; build a
       # universal, ad-hoc signed app. Developer ID signing and notarization
@@ -108,8 +143,8 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          ditto -c -k --keepParent build/Release/AmpCap.app dist/AmpCap-macos-universal.zip
-          (cd dist && shasum -a 256 *.zip > SHA256SUMS-macos.txt && cat SHA256SUMS-macos.txt)
+          ditto -c -k --keepParent build/Release/AmpCap.app dist/AmpCap${{ matrix.name_tag }}-macos-universal.zip
+          (cd dist && shasum -a 256 *.zip > SHA256SUMS-macos${{ matrix.tag }}.txt && cat SHA256SUMS-macos${{ matrix.tag }}.txt)
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: github.event_name != 'pull_request'
@@ -118,7 +153,7 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ampcap-macos
+          name: ampcap-macos${{ matrix.tag }}
           path: dist/
           if-no-files-found: error
 

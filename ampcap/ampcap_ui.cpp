@@ -78,6 +78,7 @@
 
 
 #include "ampcap_version.h"
+#include "ampcap_brand_config.h"
 
 #include "resource.h"
 
@@ -288,7 +289,7 @@ void draw_timedisp(LICE_IBitmap *bm, int sec, int timeposout[4], int bw, int bh)
 #else
 #define AMPCAP_COPYRIGHT_SIGN "\xC2\xA9"  // UTF-8 (SWELL)
 #endif
-char g_watermark[256] = AMPCAP_COPYRIGHT_SIGN " Amplithian Polyforge";
+char g_watermark[256] = AMPCAP_COPYRIGHT_SIGN " " AMPCAP_WATERMARK_TEXT;
 
 // LICE's built-in font only has glyphs for ASCII 1-127, so the copyright
 // sign is drawn from its own 8x8 bitmap and other non-ASCII characters
@@ -343,19 +344,26 @@ void draw_watermark(LICE_IBitmap *bm, int bw, int bh)
   const int x = pad, y = bh - h - pad;
   if (bh < h + pad*2) return;
 
-  // Dark Ink #0B1020 plate, translucent so the capture shows through
-  LICE_FillRect(bm, x, y, w, h, LICE_RGBA(0x0B,0x10,0x20,255), 0.6f, LICE_BLIT_MODE_COPY);
+  #define WM_R(c) (((c)>>16)&0xFF)
+  #define WM_G(c) (((c)>>8)&0xFF)
+  #define WM_B(c) ((c)&0xFF)
+  #define WM_RGBA(c) LICE_RGBA(WM_R(c),WM_G(c),WM_B(c),255)
 
-  // brand gradient #2563FF -> #7C5CFF at 135 degrees, split across x and y
+  // brand plate (Dark Ink for Amplithian), translucent so the capture shows through
+  LICE_FillRect(bm, x, y, w, h, WM_RGBA(AMPCAP_WATERMARK_PLATE), 0.6f, LICE_BLIT_MODE_COPY);
+
+  // brand gradient mark (#2563FF -> #7C5CFF for Amplithian) at 135 degrees, split across x and y
   const float d = 2.0f * 255.0f * (float)mark;
+  const int ma = AMPCAP_WATERMARK_MARK_A, mb = AMPCAP_WATERMARK_MARK_B;
+  const float dr = (WM_R(mb)-WM_R(ma))/d, dg = (WM_G(mb)-WM_G(ma))/d, db = (WM_B(mb)-WM_B(ma))/d;
   LICE_GradRect(bm, x+pad, y+pad, mark, mark,
-                0x25/255.0f, 0x63/255.0f, 1.0f, 1.0f,
-                (0x7C-0x25)/d, (0x5C-0x63)/d, 0.0f, 0.0f,
-                (0x7C-0x25)/d, (0x5C-0x63)/d, 0.0f, 0.0f,
+                WM_R(ma)/255.0f, WM_G(ma)/255.0f, WM_B(ma)/255.0f, 1.0f,
+                dr, dg, db, 0.0f,
+                dr, dg, db, 0.0f,
                 LICE_BLIT_MODE_COPY);
 
-  // Light Core #F4F8FF text
-  draw_watermark_text(bm, x+pad+mark+pad, y+pad, g_watermark, LICE_RGBA(0xF4,0xF8,0xFF,255), 0.9f, cells);
+  // brand ink (Light Core for Amplithian) text
+  draw_watermark_text(bm, x+pad+mark+pad, y+pad, g_watermark, WM_RGBA(AMPCAP_WATERMARK_INK), 0.9f, cells);
 }
 
 
