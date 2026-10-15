@@ -1,6 +1,7 @@
 /*
     AmpCap
-    ampcap_brand.h: Amplithian header band and infinity mark, drawn with LICE
+    ampcap_brand.h: the Amplithian infinity mark, drawn with LICE (used by
+    make-icons.cpp to render the app icon)
 
     Copyright (C) 2026 Amplithian Holdings LLC
 
@@ -17,9 +18,7 @@
 
 // Amplithian brand tokens (AF-2026-0318)
 #define AMPCAP_BLUE        LICE_RGBA(0x25,0x63,0xFF,255) // Amplithian Blue
-#define AMPCAP_VIOLET      LICE_RGBA(0x7C,0x5C,0xFF,255) // Resonance Violet
 #define AMPCAP_LIGHT_CORE  LICE_RGBA(0xF4,0xF8,0xFF,255)
-#define AMPCAP_BLUE_30     LICE_RGBA(0xB5,0xCC,0xFF,255) // Blue tonal 30
 #define AMPCAP_BLUE_170    LICE_RGBA(0x0A,0x1A,0x4D,255) // Blue tonal 170
 
 // Antialiased stroke along a sampled curve: each pixel's coverage comes from
@@ -125,30 +124,6 @@ static void ampcap_draw_infinity(LICE_IBitmap *bm, int x0, int y0, int w, int h)
       if (a > 0.0) LICE_PutPixel(bm, px, py, LICE_RGBA(255,255,255,255), (float)(a > 1.0 ? 1.0 : a), LICE_BLIT_MODE_COPY);
     }
   }
-}
-
-// Header (title bar) background: Amplithian Blue with the brand gradient
-// (#2563FF -> #7C5CFF) as a rule along the bottom edge, and the infinity mark
-// starting at x. Returns the x where the title text should start.
-static int ampcap_draw_header(LICE_IBitmap *bm, int w, int h, int x)
-{
-  if (!bm || w < 1 || h < 1) return 0;
-  LICE_FillRect(bm, 0, 0, w, h, AMPCAP_BLUE, 1.0f, LICE_BLIT_MODE_COPY);
-
-  const int rule = h >= 16 ? 2 : 1;
-  const int pad = h / 6 + 1;
-  const int lh = h - rule - pad*2;
-  const int lw = (int)(lh * 2.9);
-  ampcap_draw_infinity(bm, x, pad, lw, lh);
-
-  const float d = 255.0f * (float)w;
-  LICE_GradRect(bm, 0, h-rule, w, rule,
-                0x25/255.0f, 0x63/255.0f, 1.0f, 1.0f,
-                (0x7C-0x25)/d, (0x5C-0x63)/d, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f,
-                LICE_BLIT_MODE_COPY);
-
-  return x + lw + pad + 2;
 }
 
 #endif

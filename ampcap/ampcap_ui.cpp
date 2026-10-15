@@ -22,7 +22,6 @@
 
 
 #include <stdio.h>
-#include <math.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
@@ -279,8 +278,6 @@ void draw_timedisp(LICE_IBitmap *bm, int sec, int timeposout[4], int bw, int bh)
   }
   if (timeposout) memcpy(timeposout,timepos,sizeof(timepos));
 }
-
-#include "ampcap_brand.h"
 
 // Copyright watermark (Amplithian Polyforge), drawn bottom-left of every
 // captured frame; the elapsed time display uses bottom-right. The text is
@@ -684,185 +681,6 @@ void UpdateStatusText(HWND hwndDlg)
 }
 
 
-// The Amplithian header is the window's title bar: the strip between the top
-// of the client area and the view rect. On Windows the dialog has no native
-// caption (see its STYLE), so the header carries the window title and its
-// own minimize and close buttons, and dragging it moves the window. On macOS
-// the native title bar is made transparent and the header shows through it,
-// beside the traffic-light buttons. The header is outside the view rect, so
-// it never appears in recordings.
-
-#ifdef __APPLE__
-bool SetNSWindowTransparentTitlebar(HWND);
-static int s_header_inset; // room for the traffic lights once the title bar is transparent
-#endif
-
-enum { HEADER_BTN_NONE=-1, HEADER_BTN_MIN, HEADER_BTN_CLOSE, HEADER_BTN_COUNT };
-static int s_header_hot = HEADER_BTN_NONE, s_header_pressed = HEADER_BTN_NONE;
-
-static int GetHeaderRect(HWND hwndDlg, RECT *hr)
-{
-  RECT vr, cr;
-  GetWindowRect(GetDlgItem(hwndDlg,IDC_VIEWRECT),&vr);
-  ScreenToClient(hwndDlg,(LPPOINT)&vr);
-  ScreenToClient(hwndDlg,((LPPOINT)&vr)+1);
-  GetClientRect(hwndDlg,&cr);
-  hr->left = hr->top = 0;
-  hr->right = cr.right;
-  hr->bottom = vr.top - vr.left - 1; // keep the side border's gap above the view rect frame
-  return hr->bottom;
-}
-
-static bool GetHeaderButtonRect(HWND hwndDlg, int idx, RECT *r)
-{
-#ifdef _WIN32
-  RECT hr;
-  const int h = GetHeaderRect(hwndDlg,&hr);
-  if (h < 8) return false;
-  const int bw = h*7/4;
-  r->right = hr.right - (HEADER_BTN_COUNT-1-idx)*bw;
-  r->left = r->right - bw;
-  r->top = 0;
-  r->bottom = h - 2; // stop above the gradient rule
-  return true;
-#else
-  return false; // macOS keeps its own window buttons
-#endif
-}
-
-static int HeaderButtonAt(HWND hwndDlg, POINT pt)
-{
-  for (int i = 0; i < HEADER_BTN_COUNT; i++)
-  {
-    RECT r;
-    if (GetHeaderButtonRect(hwndDlg,i,&r) && PtInRect(&r,pt)) return i;
-  }
-  return HEADER_BTN_NONE;
-}
-
-static void InvalidateBrandHeader(HWND hwndDlg)
-{
-  RECT hr;
-  if (GetHeaderRect(hwndDlg,&hr) > 0) InvalidateRect(hwndDlg,&hr,FALSE);
-}
-
-static void DrawBrandHeader(HWND hwndDlg, HDC hdc)
-{
-  static LICE_IBitmap *bg, *comp;
-  static HFONT font;
-  static int text_x;
-
-  RECT hr;
-  const int h = GetHeaderRect(hwndDlg,&hr), w = hr.right;
-  if (w < 1 || h < 8) return;
-
-  if (!bg || bg->getWidth() != w || bg->getHeight() != h)
-  {
-    if (!bg)
-    {
-      bg = LICE_CreateMemBitmap(w,h);
-      comp = LICE_CreateSysBitmap(w,h);
-    }
-    else
-    {
-      bg->resize(w,h);
-      comp->resize(w,h);
-    }
-    int inset = h/6 + 3;
-#ifdef __APPLE__
-    if (s_header_inset) inset = s_header_inset;
-#endif
-    text_x = ampcap_draw_header(bg,w,h,inset);
-    if (font) DeleteObject(font);
-    font = NULL;
-  }
-  HDC dc = comp->getDC();
-  if (!dc) return;
-
-  // all LICE drawing first, then GDI text on top
-  LICE_Copy(comp,bg);
-
-  int text_right = w - 6;
-  for (int i = 0; i < HEADER_BTN_COUNT; i++)
-  {
-    RECT r;
-    if (!GetHeaderButtonRect(hwndDlg,i,&r)) continue;
-    if (r.left < text_right) text_right = r.left;
-
-    const bool hot = s_header_hot == i, down = hot && s_header_pressed == i;
-    if (hot)
-    {
-      if (i == HEADER_BTN_CLOSE) // brand Error #EF4444
-        LICE_FillRect(comp, r.left, r.top, r.right-r.left, r.bottom-r.top, LICE_RGBA(0xEF,0x44,0x44,255), down ? 0.75f : 1.0f, LICE_BLIT_MODE_COPY);
-      else
-        LICE_FillRect(comp, r.left, r.top, r.right-r.left, r.bottom-r.top, AMPCAP_LIGHT_CORE, down ? 0.3f : 0.18f, LICE_BLIT_MODE_COPY);
-    }
-
-    const float gs = (float)(h*3/8)*0.5f; // half the glyph size
-    const float cx = (r.left + r.right)*0.5f, cy = (r.top + r.bottom)*0.5f;
-    if (i == HEADER_BTN_CLOSE)
-    {
-      LICE_FLine(comp, cx-gs, cy-gs, cx+gs, cy+gs, AMPCAP_LIGHT_CORE, 1.0f, LICE_BLIT_MODE_COPY, true);
-      LICE_FLine(comp, cx-gs, cy+gs, cx+gs, cy-gs, AMPCAP_LIGHT_CORE, 1.0f, LICE_BLIT_MODE_COPY, true);
-    }
-    else
-    {
-      LICE_Line(comp, (int)(cx-gs), (int)cy, (int)(cx+gs), (int)cy, AMPCAP_LIGHT_CORE, 1.0f, LICE_BLIT_MODE_COPY, false);
-    }
-  }
-
-  if (!font)
-  {
-#ifdef _WIN32
-    const char *face = "Segoe UI";
-#else
-    const char *face = "Helvetica Neue";
-#endif
-    font = CreateFont(-(h*9/16),0,0,0,FW_SEMIBOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-                      OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,DEFAULT_PITCH,face);
-  }
-  HGDIOBJ oldfont = SelectObject(dc,font);
-  SetBkMode(dc,TRANSPARENT);
-
-  // the window title in Light Core, its "[stopped]" / "[recording]" /
-  // "[paused]" state in Blue 30
-  char title[512];
-  GetWindowText(hwndDlg,title,sizeof(title));
-  const char *state = strrchr(title,'[');
-  char head[512];
-  lstrcpyn_safe(head, title, state ? (int)(state - title) + 1 : (int)sizeof(head));
-
-  RECT tr = { text_x, 0, text_right - 4, h - 2 };
-  int state_w = 0;
-  if (state)
-  {
-    RECT sr = tr;
-    DrawText(dc,state,-1,&sr,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-    state_w = sr.right - sr.left;
-  }
-
-  RECT mr = tr;
-  mr.right -= state_w;
-  if (mr.right > mr.left)
-  {
-    SetTextColor(dc,RGB(0xF4,0xF8,0xFF));
-    DrawText(dc,head,-1,&mr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX|DT_END_ELLIPSIS);
-  }
-  if (state)
-  {
-    RECT cr = tr;
-    DrawText(dc,head,-1,&cr,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-    RECT sr = tr;
-    sr.left = cr.right < tr.right - state_w ? cr.right : tr.right - state_w;
-    if (sr.left < tr.left) sr.left = tr.left;
-    SetTextColor(dc,RGB(0xB5,0xCC,0xFF));
-    DrawText(dc,state,-1,&sr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX|DT_END_ELLIPSIS);
-  }
-
-  SelectObject(dc,oldfont);
-  BitBlt(hdc,0,0,w,h,dc,0,0,SRCCOPY);
-}
-
 void UpdateCaption(HWND hwndDlg)
 {
   if (!g_cap_state) 
@@ -891,7 +709,6 @@ void UpdateCaption(HWND hwndDlg)
     snprintf(buf,sizeof(buf),"%s%.100s - AmpCap%s",pbuf,p,pbuf[0]?"":g_cap_state==1?" [recording]":" [paused]");
     SetWindowText(hwndDlg,buf);
   }
-  InvalidateBrandHeader(hwndDlg);
 }
 
 void SaveRestoreRecRect(HWND hwndDlg, bool restore)
@@ -1385,11 +1202,6 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
       g_wndsize.init_item(IDC_INSERT,1,1,1,1);
       
       ShowWindow(GetDlgItem(hwndDlg, IDC_INSERT), SW_HIDE);
-#ifdef __APPLE__
-      // after g_wndsize.init: the content view grows into the title bar, and
-      // the WM_SIZE below lays the dialog out for the bigger client area
-      if (SetNSWindowTransparentTitlebar(hwndDlg)) s_header_inset = 76;
-#endif
       SendMessage(hwndDlg,WM_SIZE,0,0);
 
       ++g_reent;
@@ -1661,15 +1473,15 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
       {
         SendMessage(hwndDlg, WM_COMMAND, IDC_REC, 0);
       }
-    break;
-#endif
+    break;   
+#else
     case WM_PAINT:
+
+      // osx hook
       {
         PAINTSTRUCT ps;
         if (BeginPaint(hwndDlg,&ps))
         {
-#ifndef _WIN32
-          // osx hook
           RECT r,r2;
           GetWindowRect(GetDlgItem(hwndDlg,IDC_VIEWRECT),&r);
           ScreenToClient(hwndDlg,(LPPOINT)&r);
@@ -1707,12 +1519,11 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
           
           SelectObject(ps.hdc,oldPen);
           DeleteObject(pen);
-#endif
-          DrawBrandHeader(hwndDlg,ps.hdc);
           EndPaint(hwndDlg,&ps);
         }
-      }
+      }      
     break;
+#endif
 
     case WM_COMMAND:
       switch (LOWORD(wParam))
@@ -2079,59 +1890,6 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     case WM_LBUTTONUP:
       ReleaseCapture();
     break;
-#else
-    // the header's minimize and close buttons; WM_NCHITTEST makes the rest
-    // of the client area drag the window
-    case WM_MOUSEMOVE:
-      {
-        POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
-        const int hot = HeaderButtonAt(hwndDlg,pt);
-        if (hot != s_header_hot)
-        {
-          s_header_hot = hot;
-          InvalidateBrandHeader(hwndDlg);
-          if (hot != HEADER_BTN_NONE)
-          {
-            TRACKMOUSEEVENT tme = { sizeof(tme), TME_LEAVE, hwndDlg, 0 };
-            TrackMouseEvent(&tme);
-          }
-        }
-      }
-    break;
-    case WM_MOUSELEAVE:
-      if (s_header_hot != HEADER_BTN_NONE && GetCapture() != hwndDlg)
-      {
-        s_header_hot = HEADER_BTN_NONE;
-        InvalidateBrandHeader(hwndDlg);
-      }
-    break;
-    case WM_LBUTTONDOWN:
-      {
-        POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
-        s_header_pressed = HeaderButtonAt(hwndDlg,pt);
-        if (s_header_pressed != HEADER_BTN_NONE)
-        {
-          SetCapture(hwndDlg);
-          InvalidateBrandHeader(hwndDlg);
-        }
-      }
-    break;
-    case WM_LBUTTONUP:
-      if (s_header_pressed != HEADER_BTN_NONE)
-      {
-        POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
-        const int btn = s_header_pressed;
-        s_header_pressed = HEADER_BTN_NONE;
-        ReleaseCapture();
-        if (HeaderButtonAt(hwndDlg,pt) == btn)
-        {
-          s_header_hot = HEADER_BTN_NONE;
-          if (btn == HEADER_BTN_CLOSE) SendMessage(hwndDlg,WM_CLOSE,0,0);
-          else ShowWindow(hwndDlg,SW_MINIMIZE);
-        }
-        InvalidateBrandHeader(hwndDlg);
-      }
-    break;
 #endif
     case WM_MOVE:
     break;
@@ -2185,7 +1943,7 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             ScreenToClient(hwndDlg, &pt);
             if (PtInRect(&rc, pt))
             {
-                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, HeaderButtonAt(hwndDlg, pt) != HEADER_BTN_NONE ? HTCLIENT : HTCAPTION);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, HTCAPTION);
                 return 1;
             }
         }

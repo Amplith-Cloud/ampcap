@@ -330,23 +330,6 @@ void SetNSWindowTransparent(HWND h)
   [w setBackgroundColor:[NSColor clearColor]];
 }
 
-// Hides the title and makes the title bar transparent, with the content view
-// running underneath it, so the Amplithian header drawn at the top of the
-// dialog becomes the title bar (the traffic-light buttons stay). Returns
-// false if the window can't do that.
-bool SetNSWindowTransparentTitlebar(HWND h)
-{
-  NSWindow *w = (NSWindow *)h;
-  if ([w isKindOfClass:[NSView class]]) w = [(NSView *)w window];
-  else if (![w isKindOfClass:[NSWindow class]]) return false;
-  if (!w || ![w respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) return false;
-
-  [w setTitlebarAppearsTransparent:YES];
-  [w setTitleVisibility:NSWindowTitleHidden];
-  [w setStyleMask:[w styleMask] | NSWindowStyleMaskFullSizeContentView];
-  return true;
-}
-
 void SetNSWindowOpaque(HWND h, bool op)
 {
   NSWindow *w = (NSWindow *)h;
