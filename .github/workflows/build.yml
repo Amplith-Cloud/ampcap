@@ -17,6 +17,7 @@ concurrency:
 jobs:
   # AmpCap ships 64-bit only on Windows.
   windows:
+    name: windows (${{ matrix.brand }})
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -98,6 +99,7 @@ jobs:
           if-no-files-found: error
 
   macos:
+    name: macos (${{ matrix.brand }})
     runs-on: macos-15
     strategy:
       fail-fast: false
