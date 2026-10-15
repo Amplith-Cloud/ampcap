@@ -22,6 +22,7 @@
 
 
 #include <stdio.h>
+#include <math.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
@@ -278,6 +279,8 @@ void draw_timedisp(LICE_IBitmap *bm, int sec, int timeposout[4], int bw, int bh)
   }
   if (timeposout) memcpy(timeposout,timepos,sizeof(timepos));
 }
+
+#include "ampcap_brand.h"
 
 // Copyright watermark (Amplithian Polyforge), drawn bottom-left of every
 // captured frame; the elapsed time display uses bottom-right. The text is
@@ -1170,6 +1173,63 @@ void SaveConfig(HWND hwndDlg)
 
 }
 
+// Amplithian header band above the capture area: the strip between the top
+// of the client area and the view rect, less the usual border gap. It sits
+// outside the view rect, so it never appears in recordings.
+static void DrawBrandHeader(HWND hwndDlg, HDC hdc)
+{
+  static LICE_IBitmap *bm;
+  static HFONT font;
+  static int text_x;
+
+  RECT vr, cr;
+  GetWindowRect(GetDlgItem(hwndDlg,IDC_VIEWRECT),&vr);
+  ScreenToClient(hwndDlg,(LPPOINT)&vr);
+  ScreenToClient(hwndDlg,((LPPOINT)&vr)+1);
+  GetClientRect(hwndDlg,&cr);
+
+  const int w = cr.right - cr.left;
+  const int h = vr.top - vr.left - 1; // keep the side border's gap above the view rect frame
+  if (w < 1 || h < 8) return;
+
+  if (!bm || bm->getWidth() != w || bm->getHeight() != h)
+  {
+    if (!bm) bm = LICE_CreateSysBitmap(w,h);
+    else bm->resize(w,h);
+    text_x = ampcap_draw_header(bm,w,h);
+    if (font) DeleteObject(font);
+    font = NULL;
+  }
+  if (!bm->getDC()) return;
+
+  BitBlt(hdc,0,0,w,h,bm->getDC(),0,0,SRCCOPY);
+
+  if (!font)
+  {
+#ifdef _WIN32
+    const char *face = "Segoe UI";
+#else
+    const char *face = "Helvetica Neue";
+#endif
+    font = CreateFont(-(h*9/16),0,0,0,FW_SEMIBOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+                      OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,DEFAULT_PITCH,face);
+  }
+  HGDIOBJ oldfont = SelectObject(hdc,font);
+  SetBkMode(hdc,TRANSPARENT);
+
+  // "AmpCap" in Light Core, then "Amplithian" in Blue 30
+  RECT tr = { text_x, 0, w - 4, h - 2 };
+  SetTextColor(hdc,RGB(0xF4,0xF8,0xFF));
+  DrawText(hdc,"AmpCap",-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX);
+  RECT mr = tr;
+  DrawText(hdc,"AmpCap ",-1,&mr,DT_SINGLELINE|DT_LEFT|DT_NOPREFIX|DT_CALCRECT);
+  tr.left = mr.right;
+  SetTextColor(hdc,RGB(0xB5,0xCC,0xFF));
+  DrawText(hdc,"Amplithian",-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX|DT_END_ELLIPSIS);
+
+  SelectObject(hdc,oldfont);
+}
+
 static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   static POINT s_last_mouse;
@@ -1473,15 +1533,15 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
       {
         SendMessage(hwndDlg, WM_COMMAND, IDC_REC, 0);
       }
-    break;   
-#else
+    break;
+#endif
     case WM_PAINT:
-
-      // osx hook
       {
         PAINTSTRUCT ps;
         if (BeginPaint(hwndDlg,&ps))
         {
+#ifndef _WIN32
+          // osx hook
           RECT r,r2;
           GetWindowRect(GetDlgItem(hwndDlg,IDC_VIEWRECT),&r);
           ScreenToClient(hwndDlg,(LPPOINT)&r);
@@ -1519,11 +1579,12 @@ static WDL_DLGRET ampCapMainProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
           
           SelectObject(ps.hdc,oldPen);
           DeleteObject(pen);
+#endif
+          DrawBrandHeader(hwndDlg,ps.hdc);
           EndPaint(hwndDlg,&ps);
         }
-      }      
+      }
     break;
-#endif
 
     case WM_COMMAND:
       switch (LOWORD(wParam))
