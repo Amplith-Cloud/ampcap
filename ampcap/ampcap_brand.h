@@ -63,7 +63,8 @@ static void ampcap_draw_infinity(LICE_IBitmap *bm, int x0, int y0, int w, int h)
 {
   if (!bm || w < 8 || h < 4) return;
 
-  const double outer_w = h >= 24 ? h/10.0 : 1.6;
+  const bool tiny = h < 12; // small icon sizes: no inner rings, halo or crossing point
+  const double outer_w = h >= 24 ? h/10.0 : tiny ? 1.3 : 1.6;
   const double inner_w = h >= 24 ? h/22.0 : 0.9;
   const double margin = outer_w + 1.0;
   const double cx = x0 + w*0.5, cy = y0 + h*0.5;
@@ -87,19 +88,24 @@ static void ampcap_draw_infinity(LICE_IBitmap *bm, int x0, int y0, int w, int h)
   const LICE_pixel lilac = LICE_RGBA(0xC4,0xA8,0xFF,255);
   const double dot_r = outer_w * 0.9 + 0.3;
 
-  for (int py = y0; py < y0+h; py++)
+  // the halo spreads past the box, so it fades out instead of ending at an edge
+  const int spill = tiny ? 0 : (int)(outer_w*4.0 + 1.0);
+  for (int py = y0-spill; py < y0+h+spill; py++)
   {
-    for (int px = x0; px < x0+w; px++)
+    if (py < 0 || py >= bm->getHeight()) continue;
+    for (int px = x0-spill; px < x0+w+spill; px++)
     {
+      if (px < 0 || px >= bm->getWidth()) continue;
       const double fx = px + 0.5, fy = py + 0.5;
       const double gx = (fx - x0) / (double)w; // gradient position, left to right
 
       // soft dark halo first, so the light stroke reads on Amplithian Blue
       const double d_o = outer.dist(fx, fy);
-      const double halo = exp(-(d_o*d_o) / (2.0 * outer_w*outer_w * 2.2)) * 0.35;
+      const double halo = tiny ? 0.0 : exp(-(d_o*d_o) / (2.0 * outer_w*outer_w * 2.2)) * 0.35;
       if (halo > 0.01) LICE_PutPixel(bm, px, py, AMPCAP_BLUE_170, (float)halo, LICE_BLIT_MODE_COPY);
 
-      const double d_i = d_o < outer_w*0.5 + 1.0 ? 1e9 :
+      // inner rings only once there is room for them (not at small icon sizes)
+      const double d_i = tiny || d_o < outer_w*0.5 + 1.0 ? 1e9 :
                          (fx < cx ? inner_l.dist(fx, fy) : inner_r.dist(fx, fy));
       double a = inner_w*0.5 + 0.5 - d_i;
       if (a > 0.0)
@@ -115,21 +121,26 @@ static void ampcap_draw_infinity(LICE_IBitmap *bm, int x0, int y0, int w, int h)
       }
 
       const double dd = sqrt((fx-cx)*(fx-cx) + (fy-cy)*(fy-cy));
-      a = dot_r + 0.5 - dd;
+      a = tiny ? 0.0 : dot_r + 0.5 - dd;
       if (a > 0.0) LICE_PutPixel(bm, px, py, LICE_RGBA(255,255,255,255), (float)(a > 1.0 ? 1.0 : a), LICE_BLIT_MODE_COPY);
     }
   }
 }
 
-// Header band: Amplithian Blue, with the infinity mark at the left and the
-// brand gradient (#2563FF -> #7C5CFF) as a 2px rule along the bottom edge.
-// Returns the x where text should start.
-static int ampcap_draw_header(LICE_IBitmap *bm, int w, int h)
+// Header (title bar) background: Amplithian Blue with the brand gradient
+// (#2563FF -> #7C5CFF) as a rule along the bottom edge, and the infinity mark
+// starting at x. Returns the x where the title text should start.
+static int ampcap_draw_header(LICE_IBitmap *bm, int w, int h, int x)
 {
   if (!bm || w < 1 || h < 1) return 0;
   LICE_FillRect(bm, 0, 0, w, h, AMPCAP_BLUE, 1.0f, LICE_BLIT_MODE_COPY);
 
   const int rule = h >= 16 ? 2 : 1;
+  const int pad = h / 6 + 1;
+  const int lh = h - rule - pad*2;
+  const int lw = (int)(lh * 2.9);
+  ampcap_draw_infinity(bm, x, pad, lw, lh);
+
   const float d = 255.0f * (float)w;
   LICE_GradRect(bm, 0, h-rule, w, rule,
                 0x25/255.0f, 0x63/255.0f, 1.0f, 1.0f,
@@ -137,11 +148,7 @@ static int ampcap_draw_header(LICE_IBitmap *bm, int w, int h)
                 0.0f, 0.0f, 0.0f, 0.0f,
                 LICE_BLIT_MODE_COPY);
 
-  const int pad = h / 6 + 1;
-  const int lh = h - rule - pad*2;
-  const int lw = (int)(lh * 2.9);
-  ampcap_draw_infinity(bm, pad + 2, pad, lw, lh);
-  return pad + 2 + lw + pad + 2;
+  return x + lw + pad + 2;
 }
 
 #endif
